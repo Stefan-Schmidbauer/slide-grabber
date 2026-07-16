@@ -1,0 +1,33 @@
+# Claude Code / lokale Assistenz-Konfiguration
+.claude/
+CLAUDE.md
+
+# Umgebungs-/Secret-Dateien
+.env
+.env.*
+*.pem
+*.key
+secrets.*
+
+# Betriebssystem-Artefakte
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs / temporäre Dateien
+*.log
+tmp/
+temp/
+
+# Paketierte Extension-Builds
+*.zip

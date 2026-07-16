@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "SlideGrabber",
+  "version": "1.0.0",
+  "description": "Captures a series of screenshots of the current tab, advances the page between shots, and saves the images (optionally cropped) locally.",
+  "permissions": [
+    "sidePanel",
+    "tabs",
+    "downloads",
+    "debugger",
+    "storage"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "icon-16.png",
+    "32": "icon-32.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
+  },
+  "action": {
+    "default_title": "Open SlideGrabber",
+    "default_icon": {
+      "16": "icon-16.png",
+      "32": "icon-32.png",
+      "48": "icon-48.png",
+      "128": "icon-128.png"
+    }
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  }
+}

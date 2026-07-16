@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SlideGrabber</title>
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <h1>SlideGrabber</h1>
+      <button
+        type="button"
+        id="infoBtn"
+        class="info-btn"
+        title="About SlideGrabber"
+        aria-label="About SlideGrabber"
+      >
+        i
+      </button>
+    </header>
+
+    <dialog id="infoDialog" class="info-dialog">
+      <div class="info-bar">
+        <strong>About SlideGrabber</strong>
+        <button type="button" id="infoClose" class="info-bar-close">Close</button>
+      </div>
+
+      <div class="info-body">
+        <img src="icon-128.png" alt="" class="info-logo" width="72" height="72" />
+        <div class="info-name">SlideGrabber</div>
+        <div class="info-tagline">Capture any tab, slide by slide</div>
+        <div class="info-subtagline">CAPTURE. ADVANCE. DONE.</div>
+
+        <div class="info-group">
+          <div class="info-row">
+            <span class="info-row-label">Version</span>
+            <span class="info-row-value" id="infoVersion">—</span>
+          </div>
+        </div>
+
+        <div class="info-group">
+          <div class="info-row">
+            <span class="info-row-label">Author</span>
+            <span class="info-row-value">Stefan Schmidbauer</span>
+          </div>
+          <div class="info-row">
+            <span class="info-row-label">License</span>
+            <span class="info-row-value">MIT</span>
+          </div>
+          <a
+            class="info-row"
+            href="https://github.com/Stefan-Schmidbauer/slide-grabber"
+            target="_blank"
+            rel="noopener"
+          >
+            <span class="info-row-label">Source</span>
+            <span class="info-row-value link">GitHub</span>
+          </a>
+          <a
+            class="info-row"
+            href="https://stefan-schmidbauer.github.io/slide-grabber/demo/"
+            target="_blank"
+            rel="noopener"
+          >
+            <span class="info-row-label">Demo</span>
+            <span class="info-row-value link">Try it out</span>
+          </a>
+          <a
+            class="info-row"
+            href="https://github.com/Stefan-Schmidbauer/slide-grabber/blob/main/PRIVACY.md"
+            target="_blank"
+            rel="noopener"
+          >
+            <span class="info-row-label">Privacy</span>
+            <span class="info-row-value link">Policy</span>
+          </a>
+        </div>
+
+        <div class="info-group">
+          <!-- TODO: replace href with the real Chrome Web Store URL after publishing -->
+          <a class="info-row" href="#" target="_blank" rel="noopener">
+            <span class="info-row-label">Rate on Chrome Web Store</span>
+            <span class="info-row-value star">★</span>
+          </a>
+          <a
+            class="info-row"
+            href="mailto:support@ancroo.com?subject=SlideGrabber%20Feedback"
+          >
+            <span class="info-row-label">Send Feedback</span>
+            <span class="info-row-value mail">✉</span>
+          </a>
+        </div>
+
+        <div class="info-footer">Built with the help of AI (Claude by Anthropic)</div>
+      </div>
+    </dialog>
+
+    <details class="section" open>
+      <summary>Output</summary>
+      <div class="grid2">
+        <label>
+          Base filename
+          <input type="text" id="filename" value="screenshot" />
+        </label>
+        <label>
+          Subfolder in Downloads
+          <input
+            type="text"
+            id="directory"
+            placeholder="e.g. slides"
+            value="slidegrabber"
+            title="Subfolder inside the Downloads folder"
+          />
+        </label>
+        <label>
+          Format
+          <select id="format">
+            <option value="png">PNG</option>
+            <option value="jpeg">JPG</option>
+          </select>
+        </label>
+        <label id="contentLabel">
+          Content
+          <select id="content" title="Only used for JPG">
+            <option value="image">Image (smaller file)</option>
+            <option value="text">Text (sharper edges)</option>
+          </select>
+        </label>
+      </div>
+    </details>
+
+    <details class="section" open>
+      <summary>Capture</summary>
+      <div class="grid2">
+        <label>
+          Max shots
+          <input type="number" id="maxCount" min="1" value="20" />
+        </label>
+        <label>
+          Advance key
+          <select id="advanceKey">
+            <option value="Space">Spacebar</option>
+            <option value="PageDown">Page Down</option>
+            <option value="PageUp">Page Up</option>
+            <option value="ArrowRight">Arrow Right</option>
+            <option value="ArrowDown">Arrow Down</option>
+            <option value="ArrowUp">Arrow Up</option>
+            <option value="Enter">Enter</option>
+          </select>
+        </label>
+        <label>
+          First-shot delay (s)
+          <input type="number" id="startDelaySec" min="0" step="1" value="0" />
+        </label>
+        <label>
+          After key (ms)
+          <input type="number" id="delayMs" min="0" step="50" value="600" />
+        </label>
+        <label>
+          Auto-stop (identical)
+          <input
+            type="number"
+            id="autoStopIdentical"
+            min="0"
+            step="1"
+            value="2"
+            title="Stop after N identical pages in a row (0 = off)"
+          />
+        </label>
+        <label>
+          Sensitivity (%)
+          <input
+            type="number"
+            id="changeThreshold"
+            min="0"
+            step="0.1"
+            value="0.3"
+            title="How much of the page must change to count as a new page (lower = more sensitive)"
+          />
+        </label>
+      </div>
+    </details>
+
+    <details class="section">
+      <summary>Crop</summary>
+      <div class="crop-grid">
+        <label>Top (px)<input type="number" id="cropTop" min="0" value="0" /></label>
+        <label>Bottom (px)<input type="number" id="cropBottom" min="0" value="0" /></label>
+        <label>Left (px)<input type="number" id="cropLeft" min="0" value="0" /></label>
+        <label>Right (px)<input type="number" id="cropRight" min="0" value="0" /></label>
+      </div>
+
+      <button type="button" id="previewBtn" class="preview-btn">Capture preview</button>
+      <p id="previewHint" class="preview-hint" hidden>
+        Drag the lines with the mouse to set the crop edges.
+      </p>
+      <div id="previewWrap" class="preview-wrap" hidden>
+        <img id="previewImg" alt="Preview of the active tab" />
+        <div id="cropOverlay" class="crop-overlay">
+          <div class="shade shade-top"></div>
+          <div class="shade shade-bottom"></div>
+          <div class="shade shade-left"></div>
+          <div class="shade shade-right"></div>
+          <div class="keep-box"></div>
+          <div class="handle handle-top" data-edge="top" title="Drag the top edge"></div>
+          <div class="handle handle-bottom" data-edge="bottom" title="Drag the bottom edge"></div>
+          <div class="handle handle-left" data-edge="left" title="Drag the left edge"></div>
+          <div class="handle handle-right" data-edge="right" title="Drag the right edge"></div>
+        </div>
+      </div>
+    </details>
+
+    <div class="buttons">
+      <button id="startBtn" type="button">Start</button>
+      <button id="stopBtn" type="button" disabled>Stop</button>
+    </div>
+
+    <p id="status" class="status">Ready.</p>
+    <div id="log" class="log" aria-live="polite"></div>
+
+    <script src="sidepanel.js"></script>
+  </body>
+</html>

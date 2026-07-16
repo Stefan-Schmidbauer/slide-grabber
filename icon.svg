@@ -1,0 +1,27 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3b82f6"/>
+      <stop offset="1" stop-color="#1d4ed8"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#e8f0fe"/>
+    </linearGradient>
+  </defs>
+
+  <!-- App background -->
+  <rect x="6" y="6" width="116" height="116" rx="27" fill="url(#bg)"/>
+  <rect x="6" y="6" width="116" height="116" rx="27" fill="#ffffff" opacity="0.06"/>
+
+  <!-- Slide deck: stacked cards (back to front) -->
+  <rect x="26" y="30" width="56" height="40" rx="6" fill="#ffffff" opacity="0.32"/>
+  <rect x="33" y="37" width="56" height="40" rx="6" fill="#ffffff" opacity="0.58"/>
+
+  <!-- Front slide card -->
+  <rect x="40" y="44" width="56" height="40" rx="6" fill="url(#card)"/>
+  <rect x="40" y="44" width="56" height="40" rx="6" fill="none" stroke="#1e40af" stroke-width="2" opacity="0.25"/>
+
+  <!-- Grab arrow (down) on the front slide -->
+  <path d="M64 51 H72 V62 H80 L68 77 L56 62 H64 Z" fill="#1d4ed8"/>
+</svg>

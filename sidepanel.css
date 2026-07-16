@@ -1,0 +1,462 @@
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 12px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+
+h1 {
+  font-size: 16px;
+  margin: 0;
+}
+
+/* Round "i" button that opens the About dialog. */
+.info-btn {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid rgba(128, 128, 128, 0.6);
+  border-radius: 50%;
+  background: canvas;
+  color: canvastext;
+  font-size: 13px;
+  font-weight: 700;
+  font-style: italic;
+  font-family: Georgia, "Times New Roman", serif;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.75;
+}
+
+.info-btn:hover {
+  opacity: 1;
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+.info-dialog {
+  width: min(340px, calc(100vw - 24px));
+  padding: 0;
+  border: 1px solid rgba(128, 128, 128, 0.5);
+  border-radius: 12px;
+  overflow: hidden;
+  background: canvas;
+  color: canvastext;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.info-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+/* Title bar: "About …" left, "Close" right. */
+.info-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.3);
+}
+
+.info-bar strong {
+  font-size: 14px;
+}
+
+.info-bar-close {
+  flex: 0 0 auto;
+  padding: 2px 6px;
+  border: none;
+  background: none;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.info-bar-close:hover {
+  text-decoration: underline;
+}
+
+.info-body {
+  padding: 18px 14px 14px;
+}
+
+/* Centered identity block. */
+.info-logo {
+  display: block;
+  margin: 0 auto 12px;
+  border-radius: 14px;
+}
+
+.info-name {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.info-tagline {
+  text-align: center;
+  margin-top: 4px;
+  opacity: 0.75;
+}
+
+.info-subtagline {
+  text-align: center;
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  opacity: 0.5;
+}
+
+/* Grouped, rounded card lists (iOS-style). */
+.info-group {
+  margin-top: 16px;
+  border: 1px solid rgba(128, 128, 128, 0.35);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+}
+
+.info-row + .info-row {
+  border-top: 1px solid rgba(128, 128, 128, 0.25);
+}
+
+.info-row-label {
+  opacity: 0.75;
+}
+
+.info-row-value {
+  font-weight: 500;
+  text-align: right;
+}
+
+/* Rows that are links get a pointer + hover highlight. */
+a.info-row {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+a.info-row:hover {
+  background: rgba(128, 128, 128, 0.1);
+}
+
+.info-row-value.link {
+  color: #2563eb;
+}
+
+.info-row-value.star {
+  color: #f5a623;
+}
+
+.info-row-value.mail {
+  color: #2563eb;
+}
+
+.info-footer {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 11px;
+  opacity: 0.5;
+}
+
+.section {
+  border: 1px solid rgba(128, 128, 128, 0.4);
+  border-radius: 8px;
+  margin: 0 0 8px;
+  padding: 0 10px 10px;
+}
+
+.section > summary {
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 2px;
+  list-style-position: inside;
+}
+
+/* Collapsed sections keep no bottom padding. */
+.section:not([open]) {
+  padding-bottom: 0;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+/* Two columns for short, related fields. */
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 10px;
+}
+
+.grid2 label {
+  margin: 0;
+}
+
+/* Content is only meaningful for JPG – dim it for PNG. */
+#contentLabel.disabled {
+  opacity: 0.45;
+}
+
+input[type="text"],
+input[type="number"],
+select {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 3px;
+  padding: 5px 7px;
+  border: 1px solid rgba(128, 128, 128, 0.5);
+  border-radius: 5px;
+  background: canvas;
+  color: canvastext;
+  font-size: 13px;
+}
+
+.crop-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.crop-grid label {
+  margin: 0;
+  font-weight: 400;
+}
+
+.preview-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 7px;
+  border: 1px solid rgba(128, 128, 128, 0.5);
+  border-radius: 6px;
+  background: canvas;
+  color: canvastext;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.preview-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.preview-hint {
+  margin: 8px 0 4px;
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+/* Vorschaubild mit ziehbaren Schnittlinien.
+   Alle Positionen kommen aus den CSS-Variablen --t/--b/--l/--r,
+   die renderCropOverlay() in Anzeige-Pixeln setzt. */
+.preview-wrap {
+  position: relative;
+  margin-top: 6px;
+  line-height: 0;
+  touch-action: none;
+}
+
+.preview-wrap img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.crop-overlay {
+  position: absolute;
+  inset: 0;
+  --t: 0px;
+  --b: 0px;
+  --l: 0px;
+  --r: 0px;
+}
+
+.shade {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.shade-top {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--t);
+}
+
+.shade-bottom {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--b);
+}
+
+.shade-left {
+  top: var(--t);
+  bottom: var(--b);
+  left: 0;
+  width: var(--l);
+}
+
+.shade-right {
+  top: var(--t);
+  bottom: var(--b);
+  right: 0;
+  width: var(--r);
+}
+
+.keep-box {
+  position: absolute;
+  top: var(--t);
+  right: var(--r);
+  bottom: var(--b);
+  left: var(--l);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+/* Ziehflächen: größerer Trefferbereich als die sichtbare Linie (::before). */
+.handle {
+  position: absolute;
+  z-index: 2;
+}
+
+.handle::before {
+  content: "";
+  position: absolute;
+  background: #2563eb;
+}
+
+.handle-top,
+.handle-bottom {
+  left: 0;
+  right: 0;
+  height: 12px;
+  cursor: ns-resize;
+}
+
+.handle-top::before,
+.handle-bottom::before {
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  transform: translateY(-50%);
+}
+
+.handle-left,
+.handle-right {
+  top: 0;
+  bottom: 0;
+  width: 12px;
+  cursor: ew-resize;
+}
+
+.handle-left::before,
+.handle-right::before {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+}
+
+.handle-top {
+  top: var(--t);
+  transform: translateY(-50%);
+}
+
+.handle-bottom {
+  bottom: var(--b);
+  transform: translateY(50%);
+}
+
+.handle-left {
+  left: var(--l);
+  transform: translateX(-50%);
+}
+
+.handle-right {
+  right: var(--r);
+  transform: translateX(50%);
+}
+
+.buttons {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+button {
+  flex: 1;
+  padding: 9px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#startBtn {
+  background: #2563eb;
+  color: #fff;
+}
+
+#stopBtn {
+  background: #dc2626;
+  color: #fff;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.status {
+  font-weight: 600;
+  margin: 4px 0 8px;
+}
+
+.log {
+  max-height: 120px;
+  overflow-y: auto;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 11px;
+  border: 1px solid rgba(128, 128, 128, 0.3);
+  border-radius: 6px;
+  padding: 6px 8px;
+  white-space: pre-wrap;
+}
+
+.log .err {
+  color: #dc2626;
+}

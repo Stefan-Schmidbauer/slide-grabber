@@ -1,0 +1,50 @@
+<svg width="1400" height="560" viewBox="0 0 1400 560" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3b82f6"/>
+      <stop offset="1" stop-color="#1d4ed8"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#e8f0fe"/>
+    </linearGradient>
+    <linearGradient id="logobg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#dbe6fb"/>
+    </linearGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1400" height="560" fill="url(#bg)"/>
+
+  <!-- Decorative faint slide cards, upper right -->
+  <g opacity="0.10" fill="#ffffff">
+    <rect x="1040" y="70" width="220" height="150" rx="16"/>
+    <rect x="1120" y="150" width="220" height="150" rx="16"/>
+    <rect x="1000" y="300" width="220" height="150" rx="16"/>
+  </g>
+
+  <!-- soft shadow under the logo tile -->
+  <rect x="120" y="164" width="260" height="260" rx="56" fill="#0b246e" opacity="0.35" filter="url(#soft)"/>
+
+  <!-- Logo tile (icon motif) on the left -->
+  <g transform="translate(120,150)">
+    <rect x="0" y="0" width="260" height="260" rx="56" fill="url(#logobg)"/>
+    <!-- slide deck: stacked cards -->
+    <rect x="52" y="58" width="118" height="84" rx="12" fill="#3b82f6" opacity="0.28"/>
+    <rect x="67" y="73" width="118" height="84" rx="12" fill="#3b82f6" opacity="0.5"/>
+    <rect x="82" y="88" width="118" height="84" rx="12" fill="#ffffff" stroke="#1e40af" stroke-width="4" stroke-opacity="0.25"/>
+    <!-- grab arrow (down) -->
+    <path d="M133 100 h18 v24 h18 l-27 33 -27 -33 h18 z" fill="#1d4ed8"/>
+  </g>
+
+  <!-- Text block -->
+  <g transform="translate(470,0)">
+    <text x="0" y="250" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="104" font-weight="700" fill="#ffffff">SlideGrabber</text>
+    <text x="4" y="322" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="40" font-weight="400" fill="#e6eeff">Capture any tab, slide by slide.</text>
+    <text x="4" y="374" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="40" font-weight="400" fill="#e6eeff">Auto-advance, auto-crop, saved to Downloads.</text>
+  </g>
+</svg>

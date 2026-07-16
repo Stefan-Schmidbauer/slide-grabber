@@ -1,0 +1,40 @@
+<svg width="440" height="280" viewBox="0 0 440 280" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3b82f6"/>
+      <stop offset="1" stop-color="#1d4ed8"/>
+    </linearGradient>
+    <linearGradient id="logobg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#dbe6fb"/>
+    </linearGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="7"/>
+    </filter>
+  </defs>
+
+  <rect width="440" height="280" fill="url(#bg)"/>
+
+  <!-- faint decorative cards, top-right corner -->
+  <g opacity="0.10" fill="#ffffff">
+    <rect x="340" y="18" width="110" height="76" rx="10"/>
+    <rect x="376" y="60" width="110" height="76" rx="10"/>
+  </g>
+
+  <!-- soft shadow under logo tile -->
+  <rect x="34" y="70" width="150" height="150" rx="34" fill="#0b246e" opacity="0.35" filter="url(#soft)"/>
+
+  <!-- Logo tile -->
+  <g transform="translate(34,64)">
+    <rect x="0" y="0" width="150" height="150" rx="34" fill="url(#logobg)"/>
+    <rect x="30" y="34" width="68" height="48" rx="8" fill="#3b82f6" opacity="0.28"/>
+    <rect x="39" y="43" width="68" height="48" rx="8" fill="#3b82f6" opacity="0.5"/>
+    <rect x="48" y="52" width="68" height="48" rx="8" fill="#ffffff" stroke="#1e40af" stroke-width="2.5" stroke-opacity="0.25"/>
+    <path d="M77 59 h10 v14 h10 l-15 19 -15 -19 h10 z" fill="#1d4ed8"/>
+  </g>
+
+  <!-- Text -->
+  <text x="205" y="128" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="30" font-weight="700" fill="#ffffff">SlideGrabber</text>
+  <text x="206" y="160" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="18" font-weight="400" fill="#e6eeff">Capture any tab,</text>
+  <text x="206" y="184" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="18" font-weight="400" fill="#e6eeff">slide by slide.</text>
+</svg>
