@@ -41,8 +41,16 @@ Features:
 Privacy first: SlideGrabber collects no data, uses no analytics, and never sends anything to any server. Every image is written straight to your local Downloads folder.
 ```
 
-**Privacy policy URL:** *(host PRIVACY.md publicly and paste the URL here — e.g.
-via GitHub Pages or your own domain)*
+**Privacy policy URL:**
+
+```text
+https://github.com/Stefan-Schmidbauer/slide-grabber/blob/main/PRIVACY.md
+```
+
+The repo is public, so this resolves for reviewers and users — it is the same URL
+the About dialog's Privacy link uses. GitHub Pages serves from the repo root, so
+`…github.io/slide-grabber/PRIVACY.md` would also resolve, but as raw Markdown
+rather than a rendered page; prefer the blob URL above.
 
 ---
 
@@ -166,30 +174,55 @@ Regenerate after editing an SVG with, e.g.:
 ```
 inkscape store-assets/marquee-1400x560.svg -o store-assets/marquee-1400x560.png -w 1400 -h 560
 inkscape store-assets/small-promo-440x280.svg -o store-assets/small-promo-440x280.png -w 440 -h 280
+mogrify -alpha off -define png:color-type=2 store-assets/marquee-1400x560.png store-assets/small-promo-440x280.png
 ```
 
-Screenshots (1280×800 or 640×400) must still be captured from the running
-extension — they cannot be generated from source.
+The `mogrify` step is not optional: Inkscape exports RGBA, and the store rejects
+images that carry an alpha channel. The tiles are fully opaque, so dropping it is
+lossless.
+
+## Screenshots
+
+Captured from the running extension (they cannot be generated from source) and
+kept in `store-assets/`. Upload order in the listing follows this list:
+
+- `screenshot_slide-grabber.png` — side panel next to the demo deck (also
+  embedded in [README.md](README.md))
+- `screenshot_running.png` — a capture run in progress
+- `screenshot_crop.png` — crop lines on a live preview
+- `screenshot_info.png` — the About dialog
+
+Requirements, all met by the files above: **1280×800** (640×400 also allowed but
+looks soft in the listing), 24-bit PNG **without** alpha, or JPEG. The image must
+fill the frame — no transparent or empty margins. At least one is required, up to
+five are allowed.
+
+If a screenshot is re-taken, check it for an alpha channel before uploading:
+
+```
+identify -format '%f %wx%h %[channels]\n' store-assets/screenshot_*.png
+```
+
+`srgb` is good, `srgba` needs the same `mogrify -alpha off` treatment as above.
 
 ## Demo deck
 
 `demo/index.html` is a self-contained slide deck (12 full-screen slides, no
 dependencies) to try SlideGrabber on. It reacts to every advance key the
 extension can send and ends on an unchanging "The End" slide so the auto-stop
-can be tested too. Publish it via **GitHub Pages** (serve `main` from the repo
-root); it is then reachable at
-`https://stefan-schmidbauer.github.io/slide-grabber/demo/` — the URL the About
-dialog's "Try it out" link points to.
+can be tested too. It is published via **GitHub Pages** (branch `main`, folder
+`/`) and live at `https://stefan-schmidbauer.github.io/slide-grabber/demo/` — the
+URL the About dialog's "Try it out" link points to.
 
 ## About dialog links to fill in
 
 The About dialog in the side panel links out to several URLs. Verify/replace
 before or shortly after publishing:
 
-- **Source / Privacy** → `github.com/Stefan-Schmidbauer/slide-grabber` (works
-  once the repo is pushed; Privacy points at `PRIVACY.md` in the repo).
+- **Source / Privacy** → `github.com/Stefan-Schmidbauer/slide-grabber` (the repo
+  is public; Privacy points at `PRIVACY.md` in it).
 - **Send Feedback** → `mailto:support@ancroo.com`.
-- **Demo** → GitHub Pages URL above (works once Pages is enabled).
+- **Demo** → GitHub Pages URL above (live).
 - **Rate on Chrome Web Store** → placeholder `#` in `sidepanel.html`; replace
   with the real store URL (`https://chromewebstore.google.com/detail/<id>`)
   after the listing goes live.

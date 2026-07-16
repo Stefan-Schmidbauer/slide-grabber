@@ -4,6 +4,10 @@ A Chrome extension (Manifest V3) that captures a series of screenshots of the
 current tab from the side panel, presses a key to advance the page between
 shots, and saves the images — optionally cropped at the edges — locally.
 
+![SlideGrabber's side panel next to the demo deck](store-assets/screenshot_slide-grabber.png)
+
+Try it on the [demo deck](https://stefan-schmidbauer.github.io/slide-grabber/demo/).
+
 ## Installation
 
 1. Open `chrome://extensions/`.
