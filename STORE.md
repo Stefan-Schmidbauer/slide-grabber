@@ -39,7 +39,29 @@ Features:
 • Sequentially numbered files saved into a subfolder of your Downloads
 
 Privacy first: SlideGrabber collects no data, uses no analytics, and never sends anything to any server. Every image is written straight to your local Downloads folder.
+
+Free and open source (MIT licence) — the full source is on GitHub, so you can read exactly what it does before you install it.
+
+Try it out on the demo deck:
+https://stefan-schmidbauer.github.io/slide-grabber/demo/
+
+Source code, issues and licence:
+https://github.com/Stefan-Schmidbauer/slide-grabber
+
+Privacy policy:
+https://github.com/Stefan-Schmidbauer/slide-grabber/blob/main/PRIVACY.md
 ```
+
+Note: the description is plain text — URLs are shown but **not** clickable. The
+clickable links in the listing come from the dedicated URL fields below, so fill
+in both.
+
+**Additional fields (store listing → Additional fields):**
+
+| Field | Value |
+|---|---|
+| Homepage URL | `https://github.com/Stefan-Schmidbauer/slide-grabber` |
+| Support URL | `https://github.com/Stefan-Schmidbauer/slide-grabber/issues` |
 
 **Privacy policy URL:**
 
