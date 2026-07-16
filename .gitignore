@@ -29,5 +29,6 @@ desktop.ini
 tmp/
 temp/
 
-# Paketierte Extension-Builds
+# Build-Output (Store-Zips)
+dist/
 *.zip
