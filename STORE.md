@@ -236,4 +236,29 @@ files are excluded automatically. Upload that zip to the dashboard. `dist/` is
 gitignored. When adding a new runtime file, also add it to `RUNTIME_FILES` in
 `build.sh`.
 
+## Automated uploads (CI)
+
+[.github/workflows/build.yml](.github/workflows/build.yml) builds the zip on
+every push to `main`. Pushing a **tag `v<version>`** additionally creates a
+GitHub release and uploads the zip to the store as a **draft** — reviewing and
+hitting Publish stays manual. The tag must match `version` in `manifest.json`.
+
+**The very first submission cannot be automated.** The API can only update an
+item that already exists, and `CWS_EXTENSION_ID` is not known until the listing
+has been created. So: upload the first zip by hand, take the ID from the
+dashboard URL, then tags do the rest.
+
+Required repo secrets (Settings → Secrets and variables → Actions):
+
+| Secret | Where it comes from |
+|---|---|
+| `CWS_EXTENSION_ID` | the item's ID from the dashboard URL, after the first manual upload |
+| `CWS_CLIENT_ID` | Google Cloud OAuth client (Chrome Web Store API enabled) |
+| `CWS_CLIENT_SECRET` | same OAuth client |
+| `CWS_REFRESH_TOKEN` | generated once for that client, e.g. via `npx chrome-webstore-upload-keys` |
+
+The same OAuth client can serve several extensions, so the client ID, secret and
+refresh token can be reused from `ancroo/ancroo-web` — they are tied to the
+publisher account, not to one item. Only `CWS_EXTENSION_ID` is per-extension.
+
 
