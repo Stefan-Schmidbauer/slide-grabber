@@ -122,12 +122,17 @@ function setStatus(text) {
   statusEl.textContent = text;
 }
 
+// Long runs would otherwise grow the log without bound; the oldest lines are of
+// no use once they've scrolled out of a 120px box anyway.
+const LOG_MAX_LINES = 500;
+
 function log(text, isError = false) {
   const line = document.createElement("div");
   if (isError) line.className = "err";
   const time = new Date().toLocaleTimeString();
   line.textContent = `[${time}] ${text}`;
   logEl.appendChild(line);
+  while (logEl.childElementCount > LOG_MAX_LINES) logEl.firstElementChild.remove();
   logEl.scrollTop = logEl.scrollHeight;
 }
 
@@ -171,6 +176,10 @@ function renderCropOverlay() {
   const natW = previewImg.naturalWidth;
   const natH = previewImg.naturalHeight;
   if (!natW || !natH) return;
+  // A collapsed <details> leaves the image without layout. Scaling by 0 would
+  // pin all four lines to the edges, and re-opening the section wouldn't undo
+  // it – the toggle listener below re-renders once the size is real again.
+  if (!previewImg.clientWidth) return;
   const sx = previewImg.clientWidth / natW;
   const sy = previewImg.clientHeight / natH;
   cropOverlay.style.setProperty("--t", cropVal("cropTop") * sy + "px");
@@ -252,15 +261,19 @@ function startDrag(e) {
     renderCropOverlay();
   }
 
+  // Also fires on pointercancel – without it the move listener would survive the
+  // gesture and keep dragging the line without a button held down.
   function onUp() {
-    handle.releasePointerCapture(e.pointerId);
     handle.removeEventListener("pointermove", onMove);
     handle.removeEventListener("pointerup", onUp);
+    handle.removeEventListener("pointercancel", onUp);
+    if (handle.hasPointerCapture(e.pointerId)) handle.releasePointerCapture(e.pointerId);
     saveSettings();
   }
 
   handle.addEventListener("pointermove", onMove);
   handle.addEventListener("pointerup", onUp);
+  handle.addEventListener("pointercancel", onUp);
 }
 
 // ---------------------------------------------------------------------------
@@ -327,11 +340,14 @@ function frameToImageData(img) {
   return ctx.getImageData(0, 0, w, h);
 }
 
-// True if two frames look the same within tolerance (page didn't change).
-async function framesLookIdentical(dataUrlA, dataUrlB, maxFraction = DIFF_FRACTION) {
-  const [a, b] = await Promise.all([loadImage(dataUrlA), loadImage(dataUrlB)]);
-  const da = frameToImageData(a);
-  const db = frameToImageData(b);
+// Decodes a frame down to the pixel data the compare works on. Kept separate so
+// a saved frame's sample can be reused next round instead of decoding it twice.
+async function frameSample(dataUrl) {
+  return frameToImageData(await loadImage(dataUrl));
+}
+
+// True if two samples look the same within tolerance (page didn't change).
+function samplesLookIdentical(da, db, maxFraction = DIFF_FRACTION) {
   // Different dimensions -> definitely a different page.
   if (da.width !== db.width || da.height !== db.height) return false;
   const pa = da.data;
@@ -355,24 +371,39 @@ async function framesLookIdentical(dataUrlA, dataUrlB, maxFraction = DIFF_FRACTI
 
 // Captures the visible tab and applies cropping. Returns the final dataUrl.
 async function captureFrame(windowId, cfg) {
-  const captureOpts = { format: cfg.format };
-  if (cfg.format === "jpeg") captureOpts.quality = cfg.jpegQuality;
-  let dataUrl = await chrome.tabs.captureVisibleTab(windowId, captureOpts);
-
   const noCrop =
     cfg.crop.top === 0 &&
     cfg.crop.bottom === 0 &&
     cfg.crop.left === 0 &&
     cfg.crop.right === 0;
+
+  // When cropping, capture losslessly and let the canvas apply the target format
+  // once – capturing as JPEG and re-exporting as JPEG compresses twice, which
+  // shows up exactly where it hurts most (text).
+  const captureFormat = noCrop ? cfg.format : "png";
+  const captureOpts = { format: captureFormat };
+  if (captureFormat === "jpeg") captureOpts.quality = cfg.jpegQuality;
+
+  let dataUrl = await chrome.tabs.captureVisibleTab(windowId, captureOpts);
   if (!noCrop) dataUrl = await cropImage(dataUrl, cfg.crop, cfg.mime, cfg.jpegQuality / 100);
 
   return dataUrl;
 }
 
+// captureVisibleTab always grabs whatever tab is active in the window, while the
+// key press goes to the tab the run started on. If the user switches tabs
+// mid-run those drift apart: we'd screenshot the new page while advancing the
+// old one. Nothing in the API ties a capture to a tab id, so check instead.
+async function activeTabIsStill(tabId, windowId) {
+  const [active] = await chrome.tabs.query({ active: true, windowId });
+  return !!active && active.id === tabId;
+}
+
 // Saves an already-captured (and cropped) frame to disk.
 async function saveFrame(dataUrl, cfg, index) {
   const num = String(index).padStart(cfg.pad, "0");
-  const dir = cfg.directory ? cfg.directory.replace(/^\/+|\/+$/g, "") + "/" : "";
+  // Both parts are already cleaned by readConfig's sanitizers.
+  const dir = cfg.directory ? cfg.directory + "/" : "";
   const filename = `${dir}${cfg.filename}_${num}.${cfg.ext}`;
 
   await chrome.downloads.download({
@@ -414,6 +445,9 @@ async function pressKey(tabId, keyName) {
 async function attachDebugger(tabId) {
   await chrome.debugger.attach({ tabId }, "1.3");
   attachedTabId = tabId;
+  // Hand the tab to the service worker: if this panel is closed mid-run, the
+  // code below never gets to detach and the worker has to do it (background.js).
+  await chrome.storage.session.set({ attachedTabId: tabId });
 }
 
 async function detachDebugger() {
@@ -424,11 +458,32 @@ async function detachDebugger() {
     // Tab may already be closed – ignore
   }
   attachedTabId = null;
+  await chrome.storage.session.remove("attachedTabId");
 }
 
 // ---------------------------------------------------------------------------
 // Read configuration from the fields
 // ---------------------------------------------------------------------------
+// chrome.downloads rejects names containing path traversal or characters that
+// are illegal on some filesystems – and it does so on every single frame, so a
+// stray ":" would fail a whole run halfway through. Clean the input instead.
+const ILLEGAL_NAME_CHARS = /[<>:"/\\|?*\x00-\x1f]/g;
+
+function sanitizeFilename(value) {
+  // Fallback after trimming, so whitespace-only input can't yield "_001.png".
+  return value.replace(ILLEGAL_NAME_CHARS, "_").trim() || "screenshot";
+}
+
+// Slashes stay meaningful here – "a/b" is a nested subfolder – but "." and ".."
+// segments are dropped so the target can't escape the Downloads folder.
+function sanitizeDirectory(value) {
+  return value
+    .split("/")
+    .map((part) => part.replace(ILLEGAL_NAME_CHARS, "_").trim())
+    .filter((part) => part && part !== "." && part !== "..")
+    .join("/");
+}
+
 function readConfig() {
   const num = (id) => Math.max(0, parseInt(document.getElementById(id).value, 10) || 0);
   const maxCount = Math.max(1, parseInt(document.getElementById("maxCount").value, 10) || 1);
@@ -436,8 +491,8 @@ function readConfig() {
   // JPEG quality depends on content: text needs sharper edges than photos.
   const isText = document.getElementById("content").value === "text";
   return {
-    filename: (document.getElementById("filename").value || "screenshot").trim(),
-    directory: document.getElementById("directory").value.trim(),
+    filename: sanitizeFilename(document.getElementById("filename").value),
+    directory: sanitizeDirectory(document.getElementById("directory").value),
     format,
     ext: format === "jpeg" ? "jpg" : "png",
     mime: format === "jpeg" ? "image/jpeg" : "image/png",
@@ -466,12 +521,6 @@ function readConfig() {
 async function start() {
   const cfg = readConfig();
 
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (!tab) {
-    log("No active tab found.", true);
-    return;
-  }
-
   setRunningUi(true);
   stopRequested = false;
   logEl.textContent = "";
@@ -490,27 +539,44 @@ async function start() {
       return;
     }
 
+    // Resolve the target tab only after the countdown: the delay exists so the
+    // user can focus the tab they want captured, so it's the tab that's active
+    // now that the run belongs to – and, from here on, has to stay active.
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab) {
+      log("No active tab found.", true);
+      return;
+    }
+    log(`Capturing: ${tab.title || tab.url || `tab ${tab.id}`}`);
+
     await attachDebugger(tab.id);
     // Let the debugger bar appear and its viewport reflow settle before the
     // first capture, so all frames share the same (shrunken) layout.
     await sleep(DEBUGGER_SETTLE_MS);
 
     const autoStop = cfg.autoStopIdentical; // 0 = off
-    let prevFrame = null; // dataUrl of the last saved frame
+    let prevSample = null; // pixel sample of the last saved frame
     let identicalCount = 0;
     let savedCount = 0;
     let autoStopped = false;
+    let tabChanged = false;
 
     for (let i = 1; i <= cfg.maxCount; i++) {
       if (stopRequested) break;
 
+      if (!(await activeTabIsStill(tab.id, tab.windowId))) {
+        tabChanged = true;
+        break;
+      }
+
       setStatus(`Screenshot ${savedCount + 1} (page ${i} of max ${cfg.maxCount}) …`);
       const frame = await captureFrame(tab.windowId, cfg);
+      const sample = autoStop > 0 ? await frameSample(frame) : null;
 
       if (
         autoStop > 0 &&
-        prevFrame !== null &&
-        (await framesLookIdentical(frame, prevFrame, cfg.diffFraction))
+        prevSample !== null &&
+        samplesLookIdentical(sample, prevSample, cfg.diffFraction)
       ) {
         // Page didn't change – don't save; only advance and count.
         identicalCount++;
@@ -523,7 +589,7 @@ async function start() {
         identicalCount = 0;
         savedCount++;
         const name = await saveFrame(frame, cfg, savedCount);
-        prevFrame = frame;
+        prevSample = sample;
         log(`Saved: ${name}`);
       }
 
@@ -537,6 +603,12 @@ async function start() {
     if (stopRequested) {
       setStatus("Stopped.");
       log("Stopped by user.");
+    } else if (tabChanged) {
+      setStatus("Stopped (tab changed).");
+      log(
+        `The active tab changed – stopping so no other page gets captured. ${savedCount} saved.`,
+        true
+      );
     } else if (autoStopped) {
       setStatus("Done (auto-stop).");
       log(`Auto-stop: ${autoStop} identical pages in a row – ${savedCount} saved.`);
@@ -582,21 +654,28 @@ for (const handle of cropOverlay.querySelectorAll(".handle")) {
   handle.addEventListener("pointerdown", startDrag);
 }
 
-// Number field typed -> redraw lines; panel width changed -> rescale.
+// Number field typed -> redraw lines; panel width changed -> rescale;
+// section re-opened -> the image has a real size again, so rescale from it.
 for (const id of ["cropTop", "cropBottom", "cropLeft", "cropRight"]) {
   document.getElementById(id).addEventListener("input", renderCropOverlay);
 }
 window.addEventListener("resize", renderCropOverlay);
+document.getElementById("cropSection").addEventListener("toggle", renderCropOverlay);
 
 // In case the debugger is detached unexpectedly (e.g. tab closed)
 chrome.debugger.onDetach.addListener((source) => {
   if (source.tabId === attachedTabId) {
     attachedTabId = null;
+    chrome.storage.session.remove("attachedTabId");
     if (running) {
       stopRequested = true;
       log("Debugger detached (tab closed?) – stopping.", true);
     }
   }
 });
+
+// Lives as long as this document does. The service worker watches it drop to
+// clean up a debugger left attached by a panel closed mid-run (background.js).
+chrome.runtime.connect({ name: "sidepanel" });
 
 loadSettings().then(updateContentEnabled);

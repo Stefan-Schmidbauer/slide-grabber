@@ -10,6 +10,8 @@ Try it on the [demo deck](https://stefan-schmidbauer.github.io/slide-grabber/dem
 
 ## Installation
 
+Requires Chrome 114 or newer (the side panel API).
+
 1. Open `chrome://extensions/`.
 2. Enable **Developer mode** in the top right.
 3. Click **Load unpacked** and select this folder.
@@ -20,7 +22,9 @@ Try it on the [demo deck](https://stefan-schmidbauer.github.io/slide-grabber/dem
 In the side panel, configure:
 
 - **File name (base)** – e.g. `slide` → files `slide_001.png`, `slide_002.png`, …
+  Characters that aren't allowed in file names (`: * ?` …) are replaced with `_`.
 - **Target folder** – a subfolder inside the Downloads folder (see note below).
+  `a/b` nests folders; `..` segments are ignored.
 - **File format** – PNG or JPG. For JPG you can choose whether the content is
   mostly *image* (smaller file) or *text* (sharper edges).
 - **Maximum number of screenshots** – the process stops automatically afterwards.
@@ -76,7 +80,12 @@ such decks, or set `0` to disable.
   first frame, taken before the reflow, would look different from the rest) and
   keeps the **Capture preview** consistent with the saved images.
 - Only the **visible** area of the active tab is captured (not a full-page
-  scrolling screenshot). The tab must be active/in the foreground.
+  scrolling screenshot). The tab that is active when the **first-shot delay**
+  expires is the one that gets captured — that's what the delay is for. From
+  then on it has to stay in the foreground: if you switch tabs mid-run,
+  SlideGrabber stops rather than capture the wrong page, because Chrome always
+  screenshots whatever tab is active while the advance key keeps going to the
+  original one.
 
 ## Privacy
 
