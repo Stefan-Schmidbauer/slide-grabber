@@ -34,6 +34,8 @@ VERSION="$(jq -r '.version' manifest.json)"
 [ -n "$VERSION" ] && [ "$VERSION" != "null" ] || { echo "error: no version in manifest.json" >&2; exit 1; }
 
 OUT="dist/slidegrabber-${VERSION}.zip"
+# The same file set unpacked, for "Load unpacked" in chrome://extensions/.
+STAGE="dist/slidegrabber-${VERSION}"
 
 # Fail loudly if a declared runtime file is missing.
 missing=0
@@ -43,11 +45,16 @@ done
 [ "$missing" -eq 0 ] || exit 1
 
 mkdir -p dist
-rm -f "$OUT"
+rm -rf "$STAGE" "$OUT"
+mkdir -p "$STAGE"
+cp "${RUNTIME_FILES[@]}" "$STAGE/"
 
-# -X drops extra file attributes for a reproducible archive; files land at root.
-zip -q -X "$OUT" "${RUNTIME_FILES[@]}"
+# Zip from the staging dir, so what's tested unpacked and what's uploaded to the
+# store are the same bytes. -X drops extra file attributes for a reproducible
+# archive; files land at the archive root, as the store requires.
+( cd "$STAGE" && zip -q -X "../slidegrabber-${VERSION}.zip" "${RUNTIME_FILES[@]}" )
 
 echo "Built $OUT ($(du -h "$OUT" | cut -f1)), version $VERSION"
+echo "Unpacked: $STAGE/ — load this via 'Load unpacked' in chrome://extensions/"
 echo "Packaged files:"
 printf '  %s\n' "${RUNTIME_FILES[@]}"
