@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "SlideGrabber",
   "version": "1.0.0",
-  "description": "Captures a series of screenshots of the current tab, advances the page between shots, and saves the images (optionally cropped) locally.",
+  "description": "Captures screenshots of the current tab, advances the page between shots, and saves the (optionally cropped) images locally.",
   "permissions": [
     "sidePanel",
     "tabs",
