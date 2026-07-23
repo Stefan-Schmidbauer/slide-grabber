@@ -236,18 +236,28 @@ can be tested too. It is published via **GitHub Pages** (branch `main`, folder
 `/`) and live at `https://stefan-schmidbauer.github.io/slide-grabber/demo/` — the
 URL the About dialog's "Try it out" link points to.
 
-## About dialog links to fill in
+## Store listing URL
 
-The About dialog in the side panel links out to several URLs. Verify/replace
-before or shortly after publishing:
+The listing is live at:
+
+```text
+https://chromewebstore.google.com/detail/slidegrabber/mhppbdinngcdcbgafcppmcchpfjgmlnk
+```
+
+The extension ID is therefore `mhppbdinngcdcbgafcppmcchpfjgmlnk` — that is the
+value for the `CWS_EXTENSION_ID` repo secret. It is public information (it is
+part of the URL above), not a credential.
+
+## About dialog links
+
+The About dialog in the side panel links out to several URLs, all of them live:
 
 - **Source / Privacy** → `github.com/Stefan-Schmidbauer/slide-grabber` (the repo
   is public; Privacy points at `PRIVACY.md` in it).
 - **Send Feedback** → `mailto:support@ancroo.com`.
-- **Demo** → GitHub Pages URL above (live).
-- **Rate on Chrome Web Store** → placeholder `#` in `sidepanel.html`; replace
-  with the real store URL (`https://chromewebstore.google.com/detail/<id>`)
-  after the listing goes live.
+- **Demo** → GitHub Pages URL above.
+- **Rate on Chrome Web Store** → the listing URL above with `/reviews` appended,
+  so the link lands directly on the review form.
 
 ## Building the upload package
 
@@ -265,16 +275,16 @@ every push to `main`. Pushing a **tag `v<version>`** additionally creates a
 GitHub release and uploads the zip to the store as a **draft** — reviewing and
 hitting Publish stays manual. The tag must match `version` in `manifest.json`.
 
-**The very first submission cannot be automated.** The API can only update an
-item that already exists, and `CWS_EXTENSION_ID` is not known until the listing
-has been created. So: upload the first zip by hand, take the ID from the
-dashboard URL, then tags do the rest.
+**The very first submission cannot be automated** — the API can only update an
+item that already exists. That step is done: version 1.0.0 was uploaded by hand
+and the listing is live, so the extension ID exists (see *Store listing URL*
+above) and tags can do the rest from here on.
 
 Required repo secrets (Settings → Secrets and variables → Actions):
 
 | Secret | Where it comes from |
 |---|---|
-| `CWS_EXTENSION_ID` | the item's ID from the dashboard URL, after the first manual upload |
+| `CWS_EXTENSION_ID` | `mhppbdinngcdcbgafcppmcchpfjgmlnk` (see *Store listing URL* above) |
 | `CWS_CLIENT_ID` | Google Cloud OAuth client (Chrome Web Store API enabled) |
 | `CWS_CLIENT_SECRET` | same OAuth client |
 | `CWS_REFRESH_TOKEN` | generated once for that client, e.g. via `npx chrome-webstore-upload-keys` |

@@ -4,6 +4,8 @@ A Chrome extension (Manifest V3) that captures a series of screenshots of the
 current tab from the side panel, presses a key to advance the page between
 shots, and saves the images — optionally cropped at the edges — locally.
 
+**[Install from the Chrome Web Store](https://chromewebstore.google.com/detail/slidegrabber/mhppbdinngcdcbgafcppmcchpfjgmlnk)**
+
 ![SlideGrabber's side panel next to the demo deck](store-assets/screenshot_slide-grabber.png)
 
 Try it on the [demo deck](https://stefan-schmidbauer.github.io/slide-grabber/demo/).
@@ -12,10 +14,21 @@ Try it on the [demo deck](https://stefan-schmidbauer.github.io/slide-grabber/dem
 
 Requires Chrome 114 or newer (the side panel API).
 
-1. Open `chrome://extensions/`.
-2. Enable **Developer mode** in the top right.
-3. Click **Load unpacked** and select this folder.
-4. Click the extension icon → the side panel opens.
+### From the Chrome Web Store (recommended)
+
+1. Open the [store listing](https://chromewebstore.google.com/detail/slidegrabber/mhppbdinngcdcbgafcppmcchpfjgmlnk)
+   and click **Add to Chrome**.
+2. Click the extension icon → the side panel opens.
+
+### From source
+
+For development, or to run a build you made yourself:
+
+1. Clone this repository.
+2. Open `chrome://extensions/`.
+3. Enable **Developer mode** in the top right.
+4. Click **Load unpacked** and select that folder.
+5. Click the extension icon → the side panel opens.
 
 ## Usage
 
