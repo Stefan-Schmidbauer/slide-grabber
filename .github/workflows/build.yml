@@ -8,9 +8,14 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Read-only by default, so a build triggered by a push or a pull request holds
+# no write token at all. Only the release job widens this, and only for itself.
 permissions:
-  contents: write
+  contents: read
 
+# Third-party and first-party actions alike are pinned to a commit SHA: a tag
+# like @v6 is mutable and would silently move if the action's repo were taken
+# over. The trailing comment names the release each SHA belongs to.
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,7 +23,9 @@ jobs:
       version: ${{ steps.build.outputs.version }}
       zip: ${{ steps.build.outputs.zip }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
 
       # No toolchain to install: the extension is vanilla JS and build.sh needs
       # only zip + jq, both present on ubuntu-latest.
@@ -43,7 +50,7 @@ jobs:
           fi
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: slidegrabber-extension
           path: ${{ steps.build.outputs.zip }}
@@ -53,15 +60,18 @@ jobs:
     needs: [build]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
+    # The only job that may write to the repo, and only on a tag.
+    permissions:
+      contents: write
     steps:
       - name: Download build artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: slidegrabber-extension
           path: .
 
       - name: Create Release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           files: slidegrabber-${{ needs.build.outputs.version }}.zip
           generate_release_notes: true
@@ -91,19 +101,70 @@ jobs:
     needs: [build, release]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
+    # The four CWS_* secrets live in this environment, not in the repo, so no
+    # other workflow and no other job in this one can read them. Restrict the
+    # environment to the "v*" tags in the repo settings (Settings →
+    # Environments → store → deployment branches and tags).
+    environment: store
+    # Needs no write access of its own: the release is already cut, and the
+    # store upload authenticates against Google, not GitHub.
+    permissions:
+      contents: read
     steps:
+      # Sparse: only the upload helper, not the whole tree.
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          sparse-checkout: .github/scripts
+          persist-credentials: false
+
       - name: Download build artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: slidegrabber-extension
           path: .
 
+      # Straight against the store's REST API with curl. The official CLI would
+      # pull chrome-webstore-upload-cli plus its entire unpinned dependency tree
+      # into the one job that holds all four store credentials — the exact path
+      # the 2025 npm worms used to read secrets out of the environment. curl and
+      # jq ship with the runner and need no install step.
+      #
       # Uploads a new draft only — publishing stays a manual click in the
-      # dashboard, same as ancroo-web. Add --auto-publish to skip that.
+      # dashboard. Add a publish call against .../items/<id>/publish to skip it.
       - name: Upload to Chrome Web Store
-        run: npx chrome-webstore-upload-cli@3 upload --source slidegrabber-${{ needs.build.outputs.version }}.zip
         env:
           EXTENSION_ID: ${{ secrets.CWS_EXTENSION_ID }}
           CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
           REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
+          ZIP: slidegrabber-${{ needs.build.outputs.version }}.zip
+        run: |
+          set -euo pipefail
+
+          if [ -z "${EXTENSION_ID:-}" ]; then
+            echo "::error::CWS_EXTENSION_ID is not set."
+            exit 1
+          fi
+          [ -f "$ZIP" ] || { echo "::error::$ZIP not found in the downloaded artifact."; exit 1; }
+
+          ACCESS_TOKEN="$(.github/scripts/cws-token.sh)"
+
+          RESPONSE="$(curl -sS \
+            -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+            -H "x-goog-api-version: 2" \
+            -T "$ZIP" \
+            "https://www.googleapis.com/upload/chromewebstore/v1.1/items/${EXTENSION_ID}")"
+
+          if printf '%s' "$RESPONSE" | jq -e '.error' >/dev/null 2>&1; then
+            echo "::error::Upload rejected: $(printf '%s' "$RESPONSE" | jq -r '.error.message // .error')"
+            exit 1
+          fi
+
+          STATE="$(printf '%s' "$RESPONSE" | jq -r '.uploadState // empty')"
+          if [ "$STATE" != "SUCCESS" ]; then
+            echo "::error::Upload finished with uploadState=${STATE:-none} (expected SUCCESS)."
+            printf '%s' "$RESPONSE" | jq -r '.itemError[]? | "::error::\(.error_code): \(.error_detail)"'
+            exit 1
+          fi
+
+          echo "Uploaded $ZIP as a new draft. Publish it by hand in the developer dashboard."

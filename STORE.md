@@ -42,6 +42,8 @@ Privacy first: SlideGrabber collects no data, uses no analytics, and never sends
 
 Free and open source (MIT licence) — the full source is on GitHub, so you can read exactly what it does before you install it.
 
+Questions or feedback? Email support@ancroo.com — happy to help.
+
 Try it out on the demo deck:
 https://stefan-schmidbauer.github.io/slide-grabber/demo/
 
@@ -274,13 +276,16 @@ gitignored. When adding a new runtime file, also add it to `RUNTIME_FILES` in
 every push to `main`. Pushing a **tag `v<version>`** additionally creates a
 GitHub release and uploads the zip to the store as a **draft** — reviewing and
 hitting Publish stays manual. The tag must match `version` in `manifest.json`.
+The upload talks to the store API directly with `curl`, so no npm package sees
+the credentials.
 
 **The very first submission cannot be automated** — the API can only update an
 item that already exists. That step is done: version 1.0.0 was uploaded by hand
 and the listing is live, so the extension ID exists (see *Store listing URL*
 above) and tags can do the rest from here on.
 
-Required repo secrets (Settings → Secrets and variables → Actions):
+These four secrets belong to the **`store` environment**, not to the repo-wide
+secrets (Settings → Environments → `store` → *Environment secrets*):
 
 | Secret | Where it comes from |
 |---|---|
@@ -292,5 +297,25 @@ Required repo secrets (Settings → Secrets and variables → Actions):
 The same OAuth client can serve several extensions, so the client ID, secret and
 refresh token can be reused from `ancroo/ancroo-web` — they are tied to the
 publisher account, not to one item. Only `CWS_EXTENSION_ID` is per-extension.
+
+### Why an environment, and not repo secrets
+
+Whoever holds the refresh token can upload *and* publish to every one of the
+installs out there, drafts or not — this is how several extensions were hijacked
+in recent years. Repo secrets are offered to every job in every workflow;
+environment secrets are offered only to a job that names that environment, and
+the environment itself can be restricted to the tags that may use it. Two
+settings make that real, and both live in the repo settings rather than in a
+file here:
+
+- **Settings → Environments → `store` → Deployment branches and tags:** switch
+  to *Selected branches and tags* and allow only the tag pattern `v*`. A job on
+  any other ref is then refused the secrets outright.
+- **Settings → Rules → Rulesets:** protect the tag pattern `v*` so nobody else
+  can create or move a release tag.
+
+Worth having alongside: 2FA on the GitHub account and on the Google developer
+account, and a rotation of the refresh token if it was ever pasted anywhere but
+the secret store.
 
 
