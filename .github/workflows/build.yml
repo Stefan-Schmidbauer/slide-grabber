@@ -151,6 +151,10 @@ jobs:
           fi
           [ -f "$ZIP" ] || { echo "::error::$ZIP not found in the downloaded artifact."; exit 1; }
 
+          # Same trimming as the credential check: a stray newline in the id
+          # would otherwise end up inside the upload URL.
+          EXTENSION_ID="$(printf '%s' "$EXTENSION_ID" | tr -d '[:space:]')"
+
           ACCESS_TOKEN="$(.github/scripts/cws-token.sh)"
 
           RESPONSE="$(curl -sS \
