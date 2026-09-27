@@ -137,7 +137,7 @@ jobs:
       # dashboard. Add a publish call against .../items/<id>/publish to skip it.
       - name: Upload to Chrome Web Store
         env:
-          EXTENSION_ID: ${{ secrets.CWS_EXTENSION_ID }}
+          EXTENSION_ID: ${{ vars.CWS_EXTENSION_ID }}
           CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
           REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
