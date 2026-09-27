@@ -284,15 +284,50 @@ item that already exists. That step is done: version 1.0.0 was uploaded by hand
 and the listing is live, so the extension ID exists (see *Store listing URL*
 above) and tags can do the rest from here on.
 
-These four secrets belong to the **`store` environment**, not to the repo-wide
-secrets (Settings → Environments → `store` → *Environment secrets*):
+Three secrets and one variable, all on the **`store` environment** rather than
+repo-wide (Settings → Environments → `store`):
 
-| Secret | Where it comes from |
+| Environment secret | Where it comes from |
 |---|---|
-| `CWS_EXTENSION_ID` | `mhppbdinngcdcbgafcppmcchpfjgmlnk` (see *Store listing URL* above) |
-| `CWS_CLIENT_ID` | Google Cloud OAuth client (Chrome Web Store API enabled) |
+| `CWS_CLIENT_ID` | Google Cloud OAuth client in project `ancroo-store` |
 | `CWS_CLIENT_SECRET` | same OAuth client |
-| `CWS_REFRESH_TOKEN` | generated once for that client, e.g. via `npx chrome-webstore-upload-keys` |
+| `CWS_REFRESH_TOKEN` | granted once by the publisher account, see below |
+
+| Environment variable | Value |
+|---|---|
+| `CWS_EXTENSION_ID` | `mhppbdinngcdcbgafcppmcchpfjgmlnk` |
+
+The item id is a **variable, not a secret**: it is public in the store URL, the
+README and the About dialog, so masking it protects nothing — while hiding it
+makes a wrong id indistinguishable from a wrong account in the logs.
+
+### Getting a refresh token
+
+The OAuth client is a *web* client whose only redirect URI is Google's OAuth
+Playground, so that is the way in — no npm package, no Cloud Console:
+
+1. https://developers.google.com/oauthplayground/ → gear icon → tick **Use your
+   own OAuth credentials**, paste client id and secret. *Access type* must be
+   **Offline**, or Google returns no refresh token at all.
+2. Under *Input your own scopes* enter exactly
+   `https://www.googleapis.com/auth/chromewebstore` and authorise.
+3. **Sign in as `ancroo.support@gmail.com`** — that account owns the listing,
+   even though it shows up as "Offered by Stefan Schmidbauer". Any other Google
+   account yields a technically valid token that cannot see the extension.
+4. *Exchange authorization code for tokens* → copy the refresh token.
+
+Old refresh tokens stay valid forever. Revoke the ones you no longer use at
+https://myaccount.google.com/connections (the entry carries the OAuth consent
+screen's name, not "Playground") or with
+`curl -X POST https://oauth2.googleapis.com/revoke -d "token=<value>"`.
+
+### Reading uploadState
+
+A GET with `projection=DRAFT` answers `uploadState: NOT_FOUND` whenever no draft
+is pending — the normal state for a listing whose current version is published.
+It does **not** mean the item is missing. What proves access is the response
+carrying `id` and `crxVersion`. On the upload `PUT`, by contrast, `uploadState`
+really does report that upload's outcome, and `SUCCESS` is what to require.
 
 The same OAuth client can serve several extensions, so the client ID, secret and
 refresh token can be reused from `ancroo/ancroo-web` — they are tied to the
