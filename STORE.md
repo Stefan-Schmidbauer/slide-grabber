@@ -18,19 +18,25 @@ paste-ready: no quote markers, no line wrapping — copy the whole block as is.
 **Summary (short description, max 132 characters):**
 
 ```text
-Capture a series of screenshots of the current tab, auto-advance the page, and save the images (optionally cropped) locally.
+Capture slide decks, photo books and documents page by page: auto-advance the page, crop, and save every page as an image locally.
 ```
 
 **Detailed description:**
 
 ```text
-SlideGrabber turns any tab into a series of saved images. Set how many screenshots to take, pick the key used to advance the page (spacebar, arrow keys, Page Down, and more), and SlideGrabber captures the visible tab, presses the key, waits, and repeats — automatically saving each frame to your Downloads folder.
+SlideGrabber turns anything you page through in your browser into a series of saved images. Set how many screenshots to take, pick the key used to turn the page (spacebar, arrow keys, Page Down, and more), and SlideGrabber captures the visible tab, presses the key, waits, and repeats — automatically saving each page to your Downloads folder.
 
-Ideal for turning slide decks, flip-book style presentations, or any key-navigated content into an ordered set of PNG or JPG files.
+Works with any content you browse page by page with the keyboard:
+• Slide decks and online presentations
+• Online photo books and photo albums — keep a copy of the pages you designed
+• Documents and text shown page by page in a web viewer
+• Any other key-navigated content
+
+The result is an ordered, numbered set of PNG or JPG files — ready to archive, print, or review offline.
 
 Features:
 • Automatic capture loop with a configurable maximum number of shots
-• Optional auto-stop when the page stops changing, so a run ends by itself at the end of a deck instead of guessing the exact count
+• Optional auto-stop when the page stops changing, so a run ends by itself on the last slide or page instead of guessing the exact count
 • Choose the advance key (spacebar, Page Up/Down, arrow keys, Enter)
 • Configurable delay between shots so the page has time to change
 • Optional startup delay so you can focus the right tab first
@@ -339,15 +345,19 @@ Whoever holds the refresh token can upload *and* publish to every one of the
 installs out there, drafts or not — this is how several extensions were hijacked
 in recent years. Repo secrets are offered to every job in every workflow;
 environment secrets are offered only to a job that names that environment, and
-the environment itself can be restricted to the tags that may use it. Two
-settings make that real, and both live in the repo settings rather than in a
-file here:
+the environment itself can be restricted to the tags that may use it. These
+settings make that real; they live in the repo settings rather than in a file
+here, and all of them are already in place:
 
-- **Settings → Environments → `store` → Deployment branches and tags:** switch
-  to *Selected branches and tags* and allow only the tag pattern `v*`. A job on
-  any other ref is then refused the secrets outright.
-- **Settings → Rules → Rulesets:** protect the tag pattern `v*` so nobody else
-  can create or move a release tag.
+- **Settings → Environments → `store` → Required reviewers:** every job that
+  uses the environment waits for a maintainer's approval, so a pushed tag alone
+  never reaches the store. Approve the waiting `publish` job in the Actions tab.
+- **Settings → Environments → `store` → Deployment branches and tags:**
+  *Selected branches and tags* — the tag pattern `v*` for releases, plus the
+  branch `main` so *Verify Store Credentials* can run. A job on any other ref
+  is refused the secrets outright.
+- **Settings → Rules → Rulesets → "Protect release tags":** `v*` tags cannot be
+  deleted or moved once pushed.
 
 Worth having alongside: 2FA on the GitHub account and on the Google developer
 account, and a rotation of the refresh token if it was ever pasted anywhere but

@@ -101,6 +101,9 @@ async function loadSettings() {
   for (const id of SETTING_IDS) {
     if (s[id] !== undefined) document.getElementById(id).value = s[id];
   }
+  // Auto-stop used to be a free number; map a stored N other than 0/2 to "Yes".
+  const autoStop = document.getElementById("autoStopIdentical");
+  if (autoStop.selectedIndex === -1) autoStop.value = "2";
 }
 
 function saveSettings() {
@@ -611,7 +614,11 @@ async function start() {
       );
     } else if (autoStopped) {
       setStatus("Done (auto-stop).");
-      log(`Auto-stop: ${autoStop} identical pages in a row – ${savedCount} saved.`);
+      // autoStop counts repeats, the user counts pages: the saved one plus
+      // the discarded repeats. Same number the field's tooltip names.
+      log(
+        `Auto-stop: ${autoStop + 1} identical pages in a row – ${savedCount} saved.`
+      );
     } else {
       setStatus("Done.");
       log(`All screenshots captured – ${savedCount} saved.`);

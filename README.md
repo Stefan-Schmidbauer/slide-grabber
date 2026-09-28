@@ -4,6 +4,10 @@ A Chrome extension (Manifest V3) that captures a series of screenshots of the
 current tab from the side panel, presses a key to advance the page between
 shots, and saves the images — optionally cropped at the edges — locally.
 
+It works with anything you page through with the keyboard: slide decks and
+online presentations, online photo books and photo albums, or documents and text
+shown page by page in a web viewer.
+
 **[Install from the Chrome Web Store](https://chromewebstore.google.com/detail/slidegrabber/mhppbdinngcdcbgafcppmcchpfjgmlnk)**
 
 ![SlideGrabber's side panel next to the demo deck](store-assets/screenshot_slide-grabber.png)
@@ -44,9 +48,9 @@ In the side panel, configure:
 - **Delay before the first screenshot** – gives you time to focus the target tab.
 - **Key to advance the page** – Spacebar, Page Down/Up, arrow keys, or Enter.
 - **Delay after key press** – a pause so the page can switch before the next shot.
-- **Auto-stop after N identical pages** – stops the run once the page no longer
-  changes (e.g. at the end of a slide deck), so you don't have to guess the exact
-  count. `0` disables it. See *How auto-stop works* below.
+- **Auto-stop** – *Yes* stops the run once the page no longer changes (e.g. at
+  the end of a slide deck), so you don't have to guess the exact count. *No*
+  always runs up to the maximum. See *How auto-stop works* below.
 - **Crop edges** – pixels for top/bottom/left/right. The saved image is smaller
   than the tab accordingly. Use **Capture preview** to drag the crop lines
   visually. The preview is taken with the debugging bar showing (see below), so
@@ -65,19 +69,18 @@ maximum. **Stop** cancels at any time.
 
 ## How auto-stop works
 
-When **Auto-stop after N identical pages** is greater than `0`, each new frame is
-compared with the last saved one. If it looks the same (compared on a downscaled
-copy, so antialiasing and a blinking cursor don't count), the frame is **not**
-saved — the page is only advanced and a counter is increased. As soon as `N`
-identical pages occur in a row, the run stops.
+When **Auto-stop** is set to *Yes*, each new frame is compared with the last
+saved one (on a downscaled copy, so antialiasing and a blinking cursor don't
+count). A page that looks the same is **not** saved — duplicates are dropped.
 
-Why `N` and not `1`? At the real end of a deck, *every* further key press yields
-the same frame, so the counter keeps climbing. A coincidental duplicate (e.g. two
-blank slides in a row) is a one-off: the next key press reveals a different page
-and resets the counter. The default `N = 2` therefore survives two identical
-pages but still stops reliably at the end. Note the trade-off: three or more
-genuinely identical pages in a row would be treated as the end — raise `N` for
-such decks, or set `0` to disable.
+- **Two identical pages in a row** (e.g. two blank slides): one is kept, and
+  the run continues with the next page.
+- **Three identical pages in a row:** treated as the end of the deck — one is
+  kept and the run stops. This is how the real end is detected, because there
+  every further key press shows the same page.
+
+If a deck genuinely contains three or more identical pages in a row, set
+auto-stop to *No*.
 
 - **Storage location:** Chrome extensions can only write to the **Downloads
   folder**. The “target folder” is therefore a subfolder underneath it

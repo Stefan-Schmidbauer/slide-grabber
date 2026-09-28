@@ -162,15 +162,14 @@
           <input type="number" id="delayMs" min="0" step="50" value="600" />
         </label>
         <label>
-          Auto-stop (0=off)
-          <input
-            type="number"
+          Auto-stop
+          <select
             id="autoStopIdentical"
-            min="0"
-            step="1"
-            value="2"
-            title="Stop after N identical pages in a row (0 = off)"
-          />
+            title="Yes: stop when the page no longer changes (3 identical pages in a row)"
+          >
+            <option value="2">Yes</option>
+            <option value="0">No</option>
+          </select>
         </label>
         <label>
           Sensitivity (%)
