@@ -42,6 +42,12 @@ In the side panel, configure:
   Characters that aren't allowed in file names (`: * ?` …) are replaced with `_`.
 - **Target folder** – a subfolder inside the Downloads folder (see note below).
   `a/b` nests folders; `..` segments are ignored.
+- **New folder per run** – *Yes* (default) saves each run into its own folder
+  inside the target folder, named after the start time and the tab title, e.g.
+  `20260928-191512_Quarterly Review`. The title is cleaned up and shortened to
+  about 40 characters so the name works on Linux, macOS and Windows. *No* saves
+  every run straight into the target folder; if a file already exists there,
+  Chrome appends ` (1)` and the log shows the name actually used.
 - **File format** – PNG or JPG. For JPG you can choose whether the content is
   mostly *image* (smaller file) or *text* (sharper edges).
 - **Maximum number of screenshots** – the process stops automatically afterwards.
@@ -64,7 +70,8 @@ maximum. **Stop** cancels at any time.
 
 1. Capture a screenshot of the visible tab area.
 2. Optionally crop the edges.
-3. Save as `<folder>/<file name>_<number>.<ext>`.
+3. Save as `<folder>/<run folder>/<file name>_<number>.<ext>` (without
+   `<run folder>` when *New folder per run* is off).
 4. Press the advance key, wait briefly, repeat from step 1 — up to the maximum.
 
 ## How auto-stop works

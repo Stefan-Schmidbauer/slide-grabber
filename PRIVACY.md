@@ -20,6 +20,10 @@ servers, no analytics, no tracking, and no third parties involved.
   are never uploaded or sent anywhere. SlideGrabber does not read, inspect, or
   analyze the contents of the images.
 
+- **The active tab's title.** It is shown in the side panel log and, when
+  *New folder per run* is on, used to name the local folder the screenshots
+  are saved into. It is not stored anywhere else and never leaves your device.
+
 - **Your settings.** The values you enter in the side panel (file name, target
   folder, format, crop values, delays, etc.) are stored locally on your device
   using Chrome's `storage` API so they are remembered between sessions. These

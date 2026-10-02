@@ -3,6 +3,7 @@
 const SETTING_IDS = [
   "filename",
   "directory",
+  "folderPerRun",
   "format",
   "content",
   "maxCount",
@@ -402,21 +403,60 @@ async function activeTabIsStill(tabId, windowId) {
   return !!active && active.id === tabId;
 }
 
-// Saves an already-captured (and cropped) frame to disk.
-async function saveFrame(dataUrl, cfg, index) {
+// Saves an already-captured (and cropped) frame to disk. Returns the requested
+// name and the one Chrome actually used – they differ when "uniquify" had to
+// append " (1)" because the file already existed. Throws if Chrome rejects or
+// cancels the download.
+async function saveFrame(dataUrl, cfg, directory, index) {
   const num = String(index).padStart(cfg.pad, "0");
-  // Both parts are already cleaned by readConfig's sanitizers.
-  const dir = cfg.directory ? cfg.directory + "/" : "";
-  const filename = `${dir}${cfg.filename}_${num}.${cfg.ext}`;
+  // All parts are already cleaned by the sanitizers.
+  const dir = directory ? directory + "/" : "";
+  const requested = `${dir}${cfg.filename}_${num}.${cfg.ext}`;
 
-  await chrome.downloads.download({
+  const downloadId = await chrome.downloads.download({
     url: dataUrl,
-    filename,
+    filename: requested,
     saveAs: false,
     conflictAction: "uniquify",
   });
 
-  return filename;
+  // Chrome reports an absolute path (backslashes on Windows); keep only as many
+  // trailing segments as we asked for, so the log stays relative to Downloads.
+  const { filename: full, error } = await downloadResult(downloadId);
+  if (error) throw new Error(`Could not save ${requested} (${error}).`);
+  const segments = requested.split("/").length;
+  const actual = full ? full.split(/[\\/]/).slice(-segments).join("/") : requested;
+  return { requested, actual };
+}
+
+// The final filename is only known once Chrome has resolved name conflicts,
+// which happens shortly after download() returns. Listen first, then query, so
+// the change can't slip through between the two. Some failures (e.g. a name
+// too long for the filesystem) don't throw in download() but only show up here
+// as an interrupted download. Resolves to { filename, error }; both empty on
+// timeout.
+function downloadResult(downloadId, timeoutMs = 3000) {
+  return new Promise((resolve) => {
+    let done = false;
+    const finish = (result) => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      chrome.downloads.onChanged.removeListener(onChanged);
+      resolve({ filename: "", error: "", ...result });
+    };
+    const onChanged = (delta) => {
+      if (delta.id !== downloadId) return;
+      if (delta.error?.current) finish({ error: delta.error.current });
+      else if (delta.filename?.current) finish({ filename: delta.filename.current });
+    };
+    chrome.downloads.onChanged.addListener(onChanged);
+    const timer = setTimeout(() => finish({}), timeoutMs);
+    chrome.downloads.search({ id: downloadId }).then(([item]) => {
+      if (item?.state === "interrupted") finish({ error: item.error || "interrupted" });
+      else if (item?.filename) finish({ filename: item.filename });
+    }, () => {});
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -470,21 +510,93 @@ async function detachDebugger() {
 // chrome.downloads rejects names containing path traversal or characters that
 // are illegal on some filesystems – and it does so on every single frame, so a
 // stray ":" would fail a whole run halfway through. Clean the input instead.
-const ILLEGAL_NAME_CHARS = /[<>:"/\\|?*\x00-\x1f]/g;
+// "%" isn't illegal, but Chrome silently turns it into "_" – do it ourselves so
+// the logged folder name matches the one on disk.
+const ILLEGAL_NAME_CHARS = /[<>:"/\\|?*%]/g;
+// Allow-list by Unicode category, so it works for every script: letters, marks
+// (accents, Indic vowel signs), numbers, punctuation, symbols (incl. emoji) and
+// spaces. Everything else – control and format characters such as ZWJ/ZWNJ/LRM,
+// surrogates, private-use and unassigned code points – is invisible anyway and
+// partly rejected by Chrome ("Invalid filename"), so it's dropped. Line breaks
+// and other control characters become spaces first.
+const LINE_BREAKS = /[\p{Cc}\p{Zl}\p{Zp}]/gu;
+const NOT_ALLOWED = /[^\p{L}\p{M}\p{N}\p{P}\p{S}\p{Zs}]/gu;
+// Windows device names are invalid even with an extension ("CON.txt").
+const RESERVED_NAME = /^(con|prn|aux|nul|com\d|lpt\d)(\.|$)/i;
+// Chrome refuses these extensions (Windows shell integration), on every OS.
+const SHELL_EXTENSION = /\.(lnk|local|\{[^.]*\})$/i;
+
+// Cleans one path component so chrome.downloads accepts it on every OS. May
+// return "" – callers decide on a fallback.
+function cleanNameComponent(value) {
+  let name = (value || "")
+    .normalize("NFC")
+    .replace(LINE_BREAKS, " ")
+    .replace(NOT_ALLOWED, "")
+    .replace(ILLEGAL_NAME_CHARS, "_")
+    .replace(/\s+/g, " ")
+    // Leading/trailing dots and (Unicode) whitespace are rejected.
+    .replace(/^[\s.]+|[\s.]+$/g, "");
+  if (RESERVED_NAME.test(name)) name = "_" + name;
+  if (SHELL_EXTENSION.test(name)) name += "_";
+  return name;
+}
 
 function sanitizeFilename(value) {
-  // Fallback after trimming, so whitespace-only input can't yield "_001.png".
-  return value.replace(ILLEGAL_NAME_CHARS, "_").trim() || "screenshot";
+  // Fallback after cleaning, so whitespace-only input can't yield "_001.png".
+  return cleanNameComponent(value) || "screenshot";
 }
 
 // Slashes stay meaningful here – "a/b" is a nested subfolder – but "." and ".."
-// segments are dropped so the target can't escape the Downloads folder.
+// segments are dropped (cleaning leaves them empty) so the target can't escape
+// the Downloads folder.
 function sanitizeDirectory(value) {
-  return value
-    .split("/")
-    .map((part) => part.replace(ILLEGAL_NAME_CHARS, "_").trim())
-    .filter((part) => part && part !== "." && part !== "..")
-    .join("/");
+  return value.split("/").map(cleanNameComponent).filter(Boolean).join("/");
+}
+
+// Per-run folder: "<YYYYMMDD-HHMMSS>_<tab title>". The timestamp alone makes it
+// unique (no need to look at what's on disk); the title is only for orientation.
+// Limits: 40 visible characters, and at most 150 UTF-8 bytes – filesystems cap a
+// name at 255 bytes, and Chrome then silently cancels the download instead of
+// failing. Bytes matter for text with many combining marks per character.
+const FOLDER_TITLE_MAX = 40;
+const FOLDER_TITLE_MAX_BYTES = 150;
+const graphemes = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+const utf8 = new TextEncoder();
+
+function runTimestamp(d) {
+  const p = (n) => String(n).padStart(2, "0");
+  return (
+    `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-` +
+    `${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`
+  );
+}
+
+function folderTitle(title) {
+  const clean = cleanNameComponent(title).replace(/\s*_[\s_]*/g, "_");
+  // Cut on grapheme boundaries so flags, emoji and accented letters stay whole.
+  const chars = [];
+  let bytes = 0;
+  for (const { segment } of graphemes.segment(clean)) {
+    bytes += utf8.encode(segment).length;
+    if (chars.length >= FOLDER_TITLE_MAX || bytes > FOLDER_TITLE_MAX_BYTES) {
+      // Prefer ending at a word boundary, unless that would drop most of it.
+      const space = chars.lastIndexOf(" ");
+      if (space >= chars.length / 2) chars.length = space;
+      break;
+    }
+    chars.push(segment);
+  }
+  // Leading separators would just double the "_" after the timestamp; the cut
+  // may have left a trailing dot or space, which Windows rejects. The "_" that
+  // guards reserved names isn't needed either: the timestamp comes first.
+  return cleanNameComponent(chars.join("").replace(/^[\s._-]+|[\s._-]+$/g, ""))
+    .replace(/^_+/, "");
+}
+
+function runFolderName(title, date) {
+  const t = folderTitle(title);
+  return t ? `${runTimestamp(date)}_${t}` : runTimestamp(date);
 }
 
 function readConfig() {
@@ -496,6 +608,7 @@ function readConfig() {
   return {
     filename: sanitizeFilename(document.getElementById("filename").value),
     directory: sanitizeDirectory(document.getElementById("directory").value),
+    folderPerRun: document.getElementById("folderPerRun").value === "1",
     format,
     ext: format === "jpeg" ? "jpg" : "png",
     mime: format === "jpeg" ? "image/jpeg" : "image/png",
@@ -552,6 +665,14 @@ async function start() {
     }
     log(`Capturing: ${tab.title || tab.url || `tab ${tab.id}`}`);
 
+    const startedAt = new Date();
+    const inTarget = (name) => [cfg.directory, name].filter(Boolean).join("/");
+    let runDir = cfg.folderPerRun ? inTarget(runFolderName(tab.title, startedAt)) : cfg.directory;
+    // Should Chrome still reject the title-based name (rules differ slightly
+    // between versions and OSes), fall back to the timestamp alone.
+    const fallbackDir = cfg.folderPerRun ? inTarget(runTimestamp(startedAt)) : cfg.directory;
+    log(`Saving to: Downloads${runDir ? "/" + runDir : ""}`);
+
     await attachDebugger(tab.id);
     // Let the debugger bar appear and its viewport reflow settle before the
     // first capture, so all frames share the same (shrunken) layout.
@@ -591,9 +712,22 @@ async function start() {
       } else {
         identicalCount = 0;
         savedCount++;
-        const name = await saveFrame(frame, cfg, savedCount);
+        let saved;
+        try {
+          saved = await saveFrame(frame, cfg, runDir, savedCount);
+        } catch (err) {
+          if (runDir === fallbackDir) throw err;
+          runDir = fallbackDir;
+          log(`${err.message} Using Downloads/${runDir} instead.`, true);
+          saved = await saveFrame(frame, cfg, runDir, savedCount);
+        }
+        const { requested, actual } = saved;
         prevSample = sample;
-        log(`Saved: ${name}`);
+        log(
+          actual === requested
+            ? `Saved: ${actual}`
+            : `Saved: ${actual} (file existed – renamed by Chrome)`
+        );
       }
 
       if (i === cfg.maxCount) break;

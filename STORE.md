@@ -42,7 +42,7 @@ Features:
 • Optional startup delay so you can focus the right tab first
 • Crop the edges of every screenshot — drag the crop lines visually on a live preview
 • PNG or JPG output, with a text/image quality mode for JPG
-• Sequentially numbered files saved into a subfolder of your Downloads
+• Sequentially numbered files saved into a subfolder of your Downloads, optionally one folder per run named after the time and tab title
 
 Privacy first: SlideGrabber collects no data, uses no analytics, and never sends anything to any server. Every image is written straight to your local Downloads folder.
 
@@ -107,7 +107,7 @@ The entire user interface of the extension is presented in Chrome's side panel, 
 ### `tabs`
 
 ```text
-Required to identify the active tab and its window so the extension can capture the correct visible tab (chrome.tabs.captureVisibleTab) and target the correct tab for the advance key press. The extension does not read tab URLs or history for any other purpose.
+Required to identify the active tab and its window so the extension can capture the correct visible tab (chrome.tabs.captureVisibleTab) and target the correct tab for the advance key press. The tab's title is used locally to name the output folder of a run and is shown in the side panel log; it is never stored elsewhere or transmitted. The extension does not read tab URLs or history for any other purpose.
 ```
 
 ### `downloads`
@@ -166,8 +166,9 @@ Answer the "What user data do you collect" checklist as follows:
 - Authentication information: **No**
 - Personal communications: **No**
 - Location: **No**
-- Web history: **No** *(only `tab.id` is read via chrome.tabs.query; URLs, page
-  titles and visit times are never read or stored)*
+- Web history: **No** *(chrome.tabs.query is used for the active tab's id and
+  title; the title only names the local output folder and never leaves the
+  device. URLs and visit times are never read or stored, nothing is collected)*
 - User activity: **No** *(the extension sends a key press, it does not log clicks,
   scrolling, mouse position or keystrokes)*
 - **Website content: Yes** — a screenshot of the rendered page is website content
