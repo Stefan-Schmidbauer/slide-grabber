@@ -274,9 +274,9 @@ select {
   opacity: 0.75;
 }
 
-/* Vorschaubild mit ziehbaren Schnittlinien.
-   Alle Positionen kommen aus den CSS-Variablen --t/--b/--l/--r,
-   die renderCropOverlay() in Anzeige-Pixeln setzt. */
+/* Preview image with draggable crop lines.
+   All positions come from the CSS variables --t/--b/--l/--r,
+   which renderCropOverlay() sets in display pixels. */
 .preview-wrap {
   position: relative;
   margin-top: 6px;
@@ -344,7 +344,7 @@ select {
   pointer-events: none;
 }
 
-/* Ziehflächen: größerer Trefferbereich als die sichtbare Linie (::before). */
+/* Drag areas: a larger hit target than the visible line (::before). */
 .handle {
   position: absolute;
   z-index: 2;

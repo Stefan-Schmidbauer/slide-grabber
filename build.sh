@@ -14,7 +14,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 # The exact set of files that ship inside the extension. Add new runtime
-# files here when the extension grows (see CLAUDE.md).
+# files here when the extension grows.
 RUNTIME_FILES=(
   manifest.json
   background.js

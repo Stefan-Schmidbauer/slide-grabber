@@ -105,10 +105,10 @@ jobs:
     needs: [build, release]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
-    # The four CWS_* secrets live in this environment, not in the repo, so no
-    # other workflow and no other job in this one can read them. Restrict the
+    # The CWS_* secrets live in this environment, not in the repo, so no other
+    # workflow and no other job in this one can read them. Restrict the
     # environment to the "v*" tags in the repo settings (Settings →
-    # Environments → store → deployment branches and tags).
+    # Environments → store → deployment branches and tags). See RELEASING.md.
     environment: store
     # Needs no write access of its own: the release is already cut, and the
     # store upload authenticates against Google, not GitHub.
@@ -129,9 +129,9 @@ jobs:
 
       # Straight against the store's REST API with curl. The official CLI would
       # pull chrome-webstore-upload-cli plus its entire unpinned dependency tree
-      # into the one job that holds all four store credentials — the exact path
-      # the 2025 npm worms used to read secrets out of the environment. curl and
-      # jq ship with the runner and need no install step.
+      # into the one job that holds the store credentials — the exact path the
+      # 2025 npm worms used to read secrets out of the environment. curl and jq
+      # ship with the runner and need no install step.
       #
       # Uploads a new draft only — publishing stays a manual click in the
       # dashboard. Add a publish call against .../items/<id>/publish to skip it.

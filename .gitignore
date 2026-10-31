@@ -1,15 +1,15 @@
-# Claude Code / lokale Assistenz-Konfiguration
+# Claude Code
 .claude/
 CLAUDE.md
 
-# Umgebungs-/Secret-Dateien
+# Environment and secret files
 .env
 .env.*
 *.pem
 *.key
 secrets.*
 
-# Betriebssystem-Artefakte
+# OS artifacts
 .DS_Store
 .DS_Store?
 ._*
@@ -24,11 +24,11 @@ desktop.ini
 *.swo
 *~
 
-# Logs / temporäre Dateien
+# Logs and temporary files
 *.log
 tmp/
 temp/
 
-# Build-Output (Store-Zips)
+# Build output (store zips)
 dist/
 *.zip

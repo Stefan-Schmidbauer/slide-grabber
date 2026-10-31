@@ -1,6 +1,7 @@
-# Privacy Policy for SlideGrabber
+# Privacy Policy — SlideGrabber
 
-**Last updated: 14 July 2026**
+**Last updated:** 31 October 2026
+**Developer:** Stefan Schmidbauer
 
 SlideGrabber is a Chrome extension that captures screenshots of the browser tab
 you are viewing and saves them to your local Downloads folder. This policy
@@ -44,8 +45,8 @@ SlideGrabber requests only the permissions required for its screenshot
 functionality (capturing the visible tab, saving files to Downloads, sending a
 key press to advance the page, storing your settings, and showing the side
 panel). None of these permissions are used to collect or transmit data. A
-detailed justification for each permission is available in the project's store
-documentation.
+detailed justification for each permission is available in
+[STORE.md](STORE.md).
 
 ## Data storage and retention
 
@@ -68,9 +69,8 @@ location with a new "Last updated" date.
 
 ## Contact
 
-If you have any questions about this privacy policy, please contact:
-
-**Stefan Schmidbauer** — support@ancroo.com
-
-You can also open an issue at
-<https://github.com/Stefan-Schmidbauer/slide-grabber/issues>.
+For privacy questions or data requests, email support@ancroo.com. To report a
+security vulnerability, please use [GitHub's private vulnerability
+reporting](https://github.com/Stefan-Schmidbauer/slide-grabber/security/advisories/new)
+rather than a public issue. For other, non-sensitive questions you can open an
+[issue](https://github.com/Stefan-Schmidbauer/slide-grabber/issues).

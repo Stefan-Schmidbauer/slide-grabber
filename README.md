@@ -89,6 +89,8 @@ count). A page that looks the same is **not** saved — duplicates are dropped.
 If a deck genuinely contains three or more identical pages in a row, set
 auto-stop to *No*.
 
+## Notes
+
 - **Storage location:** Chrome extensions can only write to the **Downloads
   folder**. The “target folder” is therefore a subfolder underneath it
   (e.g. `Downloads/slidegrabber/`), not an arbitrary path.
@@ -110,8 +112,37 @@ auto-stop to *No*.
   screenshots whatever tab is active while the advance key keeps going to the
   original one.
 
+## Packaging and releases
+
+`./build.sh` packs only the runtime files into `dist/slidegrabber-<version>.zip`.
+The release setup is documented in [RELEASING.md](RELEASING.md), store texts and
+permission justifications in [STORE.md](STORE.md).
+
 ## Privacy
 
 SlideGrabber does not collect, transmit, or share any data. All screenshots are
 saved directly to your local Downloads folder. See [PRIVACY.md](PRIVACY.md) for
 details.
+
+## Security
+
+To report a security vulnerability, please use
+[GitHub's private vulnerability reporting](https://github.com/Stefan-Schmidbauer/slide-grabber/security/advisories/new)
+instead of opening a public issue.
+
+## Support
+
+Questions or feedback? Email [support@ancroo.com](mailto:support@ancroo.com) or
+open an [issue](https://github.com/Stefan-Schmidbauer/slide-grabber/issues).
+
+## License
+
+MIT — see [LICENSE](LICENSE).
+
+## Author
+
+**Stefan Schmidbauer** — [GitHub](https://github.com/Stefan-Schmidbauer) · [stefan@ancroo.com](mailto:stefan@ancroo.com)
+
+---
+
+Built with the help of AI ([Claude](https://claude.ai) by Anthropic).

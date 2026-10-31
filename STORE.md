@@ -70,6 +70,7 @@ in both.
 |---|---|
 | Homepage URL | `https://github.com/Stefan-Schmidbauer/slide-grabber` |
 | Support URL | `https://github.com/Stefan-Schmidbauer/slide-grabber/issues` |
+| Contact email (Account tab) | `support@ancroo.com` — the public address for users, never the login of the publisher account |
 
 **Privacy policy URL:**
 
@@ -254,8 +255,9 @@ https://chromewebstore.google.com/detail/slidegrabber/mhppbdinngcdcbgafcppmcchpf
 ```
 
 The extension ID is therefore `mhppbdinngcdcbgafcppmcchpfjgmlnk` — that is the
-value for the `CWS_EXTENSION_ID` repo secret. It is public information (it is
-part of the URL above), not a credential.
+value for the `CWS_EXTENSION_ID` environment variable (see
+[RELEASING.md](RELEASING.md)). It is public information (it is part of the URL
+above), not a credential.
 
 ## About dialog links
 
@@ -268,100 +270,7 @@ The About dialog in the side panel links out to several URLs, all of them live:
 - **Rate on Chrome Web Store** → the listing URL above with `/reviews` appended,
   so the link lands directly on the review form.
 
-## Building the upload package
+## Building and releasing
 
-Run `./build.sh` to produce `dist/slidegrabber-<version>.zip` (version taken
-from `manifest.json`). It packages **only** the runtime files with
-`manifest.json` at the archive root — `demo/`, `store-assets/`, docs and dev
-files are excluded automatically. Upload that zip to the dashboard. `dist/` is
-gitignored. When adding a new runtime file, also add it to `RUNTIME_FILES` in
-`build.sh`.
-
-## Automated uploads (CI)
-
-[.github/workflows/build.yml](.github/workflows/build.yml) builds the zip on
-every push to `main`. Pushing a **tag `v<version>`** additionally creates a
-GitHub release and uploads the zip to the store as a **draft** — reviewing and
-hitting Publish stays manual. The tag must match `version` in `manifest.json`.
-The upload talks to the store API directly with `curl`, so no npm package sees
-the credentials.
-
-**The very first submission cannot be automated** — the API can only update an
-item that already exists. That step is done: version 1.0.0 was uploaded by hand
-and the listing is live, so the extension ID exists (see *Store listing URL*
-above) and tags can do the rest from here on.
-
-Three secrets and one variable, all on the **`store` environment** rather than
-repo-wide (Settings → Environments → `store`):
-
-| Environment secret | Where it comes from |
-|---|---|
-| `CWS_CLIENT_ID` | Google Cloud OAuth client in project `ancroo-store` |
-| `CWS_CLIENT_SECRET` | same OAuth client |
-| `CWS_REFRESH_TOKEN` | granted once by the publisher account, see below |
-
-| Environment variable | Value |
-|---|---|
-| `CWS_EXTENSION_ID` | `mhppbdinngcdcbgafcppmcchpfjgmlnk` |
-
-The item id is a **variable, not a secret**: it is public in the store URL, the
-README and the About dialog, so masking it protects nothing — while hiding it
-makes a wrong id indistinguishable from a wrong account in the logs.
-
-### Getting a refresh token
-
-The OAuth client is a *web* client whose only redirect URI is Google's OAuth
-Playground, so that is the way in — no npm package, no Cloud Console:
-
-1. https://developers.google.com/oauthplayground/ → gear icon → tick **Use your
-   own OAuth credentials**, paste client id and secret. *Access type* must be
-   **Offline**, or Google returns no refresh token at all.
-2. Under *Input your own scopes* enter exactly
-   `https://www.googleapis.com/auth/chromewebstore` and authorise.
-3. **Sign in as `ancroo.support@gmail.com`** — that account owns the listing,
-   even though it shows up as "Offered by Stefan Schmidbauer". Any other Google
-   account yields a technically valid token that cannot see the extension.
-4. *Exchange authorization code for tokens* → copy the refresh token.
-
-Old refresh tokens stay valid forever. Revoke the ones you no longer use at
-https://myaccount.google.com/connections (the entry carries the OAuth consent
-screen's name, not "Playground") or with
-`curl -X POST https://oauth2.googleapis.com/revoke -d "token=<value>"`.
-
-### Reading uploadState
-
-A GET with `projection=DRAFT` answers `uploadState: NOT_FOUND` whenever no draft
-is pending — the normal state for a listing whose current version is published.
-It does **not** mean the item is missing. What proves access is the response
-carrying `id` and `crxVersion`. On the upload `PUT`, by contrast, `uploadState`
-really does report that upload's outcome, and `SUCCESS` is what to require.
-
-The same OAuth client can serve several extensions, so the client ID, secret and
-refresh token can be reused from `ancroo/ancroo-web` — they are tied to the
-publisher account, not to one item. Only `CWS_EXTENSION_ID` is per-extension.
-
-### Why an environment, and not repo secrets
-
-Whoever holds the refresh token can upload *and* publish to every one of the
-installs out there, drafts or not — this is how several extensions were hijacked
-in recent years. Repo secrets are offered to every job in every workflow;
-environment secrets are offered only to a job that names that environment, and
-the environment itself can be restricted to the tags that may use it. These
-settings make that real; they live in the repo settings rather than in a file
-here, and all of them are already in place:
-
-- **Settings → Environments → `store` → Required reviewers:** every job that
-  uses the environment waits for a maintainer's approval, so a pushed tag alone
-  never reaches the store. Approve the waiting `publish` job in the Actions tab.
-- **Settings → Environments → `store` → Deployment branches and tags:**
-  *Selected branches and tags* — the tag pattern `v*` for releases, plus the
-  branch `main` so *Verify Store Credentials* can run. A job on any other ref
-  is refused the secrets outright.
-- **Settings → Rules → Rulesets → "Protect release tags":** `v*` tags cannot be
-  deleted or moved once pushed.
-
-Worth having alongside: 2FA on the GitHub account and on the Google developer
-account, and a rotation of the refresh token if it was ever pasted anywhere but
-the secret store.
-
-
+Build, CI upload and store credentials are documented in
+[RELEASING.md](RELEASING.md).
