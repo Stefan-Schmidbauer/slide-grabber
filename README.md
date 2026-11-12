@@ -10,7 +10,7 @@ shown page by page in a web viewer.
 
 **[Install from the Chrome Web Store](https://chromewebstore.google.com/detail/slidegrabber/mhppbdinngcdcbgafcppmcchpfjgmlnk)**
 
-![SlideGrabber's side panel next to the demo deck](store-assets/screenshot_slide-grabber.png)
+![SlideGrabber's side panel next to the demo deck](assets/screenshots/slide-grabber.png)
 
 Try it on the [demo deck](https://stefan-schmidbauer.github.io/slide-grabber/demo/).
 
